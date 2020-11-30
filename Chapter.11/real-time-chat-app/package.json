@@ -1,0 +1,16 @@
+{
+  "name": "real-time-chat-app",
+  "version": "0.0.1",
+  "private": true,
+  "description": "실시간 채팅 어플리케이션",
+  "main": "app.js",
+  "author": "KangSage",
+  "license": "MIT",
+  "dependencies": {
+    "ecstatic": "^4.1.4",
+    "ws": "^7.4.0"
+  },
+  "scripts": {
+    "start": "node app.js"
+  }
+}
