@@ -11,6 +11,15 @@
     "ws": "^7.4.0"
   },
   "scripts": {
-    "start": "node app.js"
+    "start-00": "node app.js 8080",
+    "start-01": "node app.js 8081",
+    "start-02": "node app.js 8082",
+    "start-03": "node app.js 8083",
+    "start-04": "node app.js 8084",
+    "start-05": "node app.js 8085",
+    "start-06": "node app.js 8086",
+    "start-07": "node app.js 8087",
+    "start-08": "node app.js 8088",
+    "start-09": "node app.js 8089"
   }
 }
