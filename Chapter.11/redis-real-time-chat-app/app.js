@@ -1,11 +1,10 @@
 const WebSocketServer = require('ws').Server;
 
-// Node.js 어플리케잇현을 Redis 서버에 연결하기 위해 사용 가능한
+// Node.js 어플리케이션을 Redis 서버에 연결하기 위해 사용 가능한
 // 모든 Redis 명령을 지원하는 Client Package
 const redis = require('redis');
 
 // 두 개의 다른 연결을 인스턴스화
-
 // 구독 전용 연결 인스턴스
 const redisSub = redis.createClient();
 // 게시 전용 연결 인스턴스
@@ -19,7 +18,7 @@ const server = require('http').createServer(
 );
 
 // WebSocket 서버의 새 인스턴스를 만들고 기존의 HTTP 서버에 연결
-const wss = new WebSocketServer({ server: server });
+const wss = new WebSocketServer({ server });
 
 // 연결 이벤트에 대한 이벤트 리스너를 등록하고 대기
 wss.on('connection', ws => {

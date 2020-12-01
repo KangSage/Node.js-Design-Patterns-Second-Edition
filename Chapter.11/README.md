@@ -92,10 +92,10 @@ P2P 아키텍처에서 모든 노드는 메시지를 수신자에게 직접 전�
 - MQTT (Message Queue Telemetry Transport)
 - STOMP (Simple/Streaming Text Orientated Messaging Protocol)
 
-브로커를 피해야 하는 이유
+브로커를 피해야 하는 경우의 이유
 
-- 단일 장애 지점의 제거
-- 브로커는 확장해야 하는 반면, P2P 아키텍처에서는 단일 노드만 확장
+- 단일 장애 지점의 제거가 필요한 경우
+- 브로커는 확장해야 하는 반면, P2P 아키텍처에서는 단일 노드만 확장하면 됨
 - 브로커 없이 메시지를 교환하면 전송 속도가 빨라짐
 
 ## 게시/구독 패턴 (pub/sub)
@@ -120,8 +120,6 @@ pub/sub을 특별하게 만드는 이유는 게시자가
 pub/sub 패턴이 분산 아키텍처를 통합하는데 어떻게 도움이 되는지 보기 위해  
 순수한 WebSockets를 사용하여 기본적인 실시간 채팅 어플리케이션을 만든다  
 여러 인스턴스를 실행하여 메시징 시스템을 통한 통신에 참여시키고 규모 조정을 해본다.
-
-[실습 예제](./real-time-chat-app)
 
 ### 메시지 브로커로 Redis 사용하기
 
@@ -177,7 +175,7 @@ redis               latest              74d107221092        12 days ago         
 $ docker network create redis-net
 
 # 컨테이너를 구분해줄 이름을 [name]에 넣고 실행
-# 6379포트 redis-net이라는 브릿지가 사용
+# 6379포트 redis-net이라는 브릿지를 사용
 
 $ docker run --name [name] -p 6379:6379 --network redis-net -d redis redis-server --appendonly yes
 
@@ -193,6 +191,86 @@ $ keys *       # 모든 키 조회
 $ key *index*  # index 포함된 키 조회
 $ del abcd     # abcd 키 삭제
 ```
+
+#### [Redis 채팅 서버 실습 예제](redis-real-time-chat-app)
+
+간단한 채팅 서버를 Redis를 메시지 브로커로 사용하여 각 인스턴스들의 통신을 통합
+
+### ØMQ를 사용한 P2P pub/sub
+
+브로커가 있으면 메시징 시스템의 아키텍처를 단순화 할 수 있다  
+그러나 대기시간이 중요한 경우, 복잡한 분산 시스템을 확장하거나  
+단일 실패 지점이 존재해선 안되는 경우처럼 최적의 솔루션이 아닌 상황이 존재
+
+#### ØMQ 소개
+
+현재 프로젝트가 P2P 메시지 교환이 필요하다면 최상의 솔루션은 ØMQ이다  
+ØMQ는 다양한 메시징 패턴을 구축할 수 있는 기본 도구를 제공하는 네트워킹 라이브러리이다  
+이 API는 로우레벨이면서 매우 빠른 최소한의 API를 가지고 원자 메시지, 로드 밸런싱, 큐 등  
+메시징 시스템의 모든 기본 구성 요소를 제공한다
+
+ØMQ가 지원하는 프로토콜
+
+- TCP (tcp://)
+- 프로세스 내 채널 - in-process channels (inproc://)
+- 프로세스 간 통신 - inter-prcess communication (ipc://)
+- PGM 프로토콜을 사용한 멀티캐스팅 (pgm:// 또는 epgm://)
+
+#### 채팅 서버를 위한 P2P 아키텍처 설계
+
+기존 아키텍처에서 브로커를 제거하면 채팅 앱의 각 인스턴스는  
+게시하는 메시지를 수신하기 위해 다른 인스턴스에 직접 연결해야함  
+ØMQ는 PUB과 SUB이라는 두 가지 유형의 소켓이 존재  
+일반적으로 PUB 소켓을 다른 SUB 소켓의 수신 대기 포트에 바인딩한다
+
+구독은 SUB소켓으로 배달되는 메시지를 지정하는 필터를 가질 수 있다.  
+필터는 간단한 `바이너리 버퍼`(or String)이므로 메시지의 시작 부분(이진 버퍼)과 일치  
+메시지가 PUB 소켓에서 전송되면 모든 연결 된  
+SUB 소켓으로 전파되지만 구독 필터가 적용된 후에만 받음
+
+#### ØMQ 설치하기
+
+```shell
+# brew로 설치하기
+
+brew install zmq
+
+# zmq의 의존성들 설치
+
+brew install asciidoc pkg-config xmlto
+```
+
+.zshrc에 환경 변수 등록
+
+```shell
+# asciidoc과 xmlto의 내부 의존성인 docbook의 환경 변수
+export XML_CATALOG_FILES="/usr/local/etc/xml/catalog"
+
+# xmlto의 내부 의존성인 gnu-getopt의 환경 변수
+export PATH="/usr/local/opt/gnu-getopt/bin:$PATH"
+
+```
+
+#### [ØMQ PUB/SUB 소켓을 사용한 채팅 서버 실습 예제](zmq-real-time-chat-app)
+
+> 주의! 제2판의 코드에서 사용한 zmq 라이브러리의 유지보수가  
+> 이미 4년전에 종료되어 올해 발간된 원서 제3판의 소스 코드를 사용함  
+> [제3판 github의 소스코드 링크](https://github.com/PacktPublishing/Node.js-Design-Patterns-Third-Edition/tree/master/13-messaging-and-integration-patterns/03-pubsub-chat-zmq)
+
+package.json의 start-00, start-01, start-02 명령어와 같이 포트를 모두 등록해주어 실행한다
+
+첫 번째 명령을 수행할 때 포트 5001, 5002는 아직 서버가 없지만 에러가 나지 않음  
+SUB소켓에 연결할 PUB소켓에 문제가 있어도 ØMQ는 에러가 내지 않고 일정 시간 간격으로  
+포트에 대한 재연결을 자동으로 시도하는 매커니즘을 가지고 있기 때문  
+이 기능은 노드가 다운되거나 다시 시작될 때 특히 유용하다.
+
+ØMQ의 기본 원리를 이용하여 브로커를 직접 구현하는데 사용할 수도 있다.
+
+### 영구 구독자 (Durable subscribers)
+
+메시징 시스템에서 중요한 추상화는 메시지 큐(MQ)이다.
+대기열 시스템은 수신자들이 메시지를 수신할 수 있을 때까지 메시지를 저장하므로
+발신자와 수신자가 반드시 동시에 활성화되고 연결될 필요는 없음.
 
 ## 파이프라인 및 작업 배포 패턴
 
