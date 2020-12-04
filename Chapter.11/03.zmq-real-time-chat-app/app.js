@@ -22,12 +22,11 @@ async function initializeSockets () {
 
   // SUB 소켓을 만들고
   const subSocket = new zmq.Subscriber()
-
-  // 다른 인스턴의 PUB 소켓에 연결
   const subPorts = [].concat(yargs.argv.sub)
-  // 대상 포트는 인스턴스의 갯수와 같아야 하므로 인자로 여러개 들어올 수 있다.
+  // 대상 포트는 인스턴스의 갯수와 같아야 하므로 인자로 여러개 들어올 수 있다
   for (const port of subPorts) {
     console.log(`Subscribing to ${port}`)
+    // 다른 인스턴스의 PUB 소켓에 연결
     subSocket.connect(`tcp://127.0.0.1:${port}`)
   }
   // chat으로 시작되는 메시지만 수신하도록 구독시 prefixes = chat 필터 사용
