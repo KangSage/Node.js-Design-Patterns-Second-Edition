@@ -130,6 +130,7 @@ pub/sub 패턴이 분산 아키텍처를 통합하는데 어떻게 도움이 되
 
 ### [RabbitMQ를 사용한 채팅 서버, 히스토리 서비스 실습 예제](04.ampq-real-time-chat-app)
 
-## 파이프라인 및 작업 배포 패턴
+### [파이프라인 및 작업 배포 패턴](05.pipeline-and-job-deploy-pattern)
+
 
 ## 요청(request)/응답(reply) 패턴
