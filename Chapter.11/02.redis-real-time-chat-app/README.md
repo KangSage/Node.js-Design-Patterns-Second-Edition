@@ -54,9 +54,20 @@ redis               latest              74d107221092        12 days ago         
 $ docker network create redis-net
 
 # 컨테이너를 구분해줄 이름을 [name]에 넣고 실행
-# 6379포트 redis-net이라는 브릿지를 사용
-
-$ docker run --name [name] -p 6379:6379 --network redis-net -d redis redis-server --appendonly yes
+$ docker run --name [name] \
+  # 내부 6379 포트를 외부 6379 포트로 연결
+  -p 6379:6379 \  
+  #redis-net이라는 브릿지를 사용
+  --network redis-net \ 
+  #daemon으로 실행
+  -d \
+  # 외부 저장소 디렉토리 지정
+  -v /Volumes/Data/docker/redis/data:/data redis redis-server \
+  # AOF 방식으로 데이터 저장
+  --appendonly yes
+  
+# 실행 예시
+$ docker run --name docker-redis -p 6379:6379 --network redis-net -d -v /Volumes/Data/docker/redis/data:/data redis redis-server --appendonly yes
 
 # redis-cli로 실행한 [name] Redis 서버에 접속
 # --rm 옵션은 기존 컨테이너가 존재하면 삭제하고 재실행
